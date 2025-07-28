@@ -105,7 +105,7 @@ countdown :: Integer -> String
 countdown n = "Ready! " ++ countdown' n ++ " Liftoff!"
 
 countdown' :: Integer -> String
-countdown' 1 = "1... "
+countdown' 0 = ""
 countdown' n = show n ++ "... " ++ countdown' (n - 1)
 
 ------------------------------------------------------------------------------
@@ -155,10 +155,6 @@ isPrime n = smallestDivisor n == n
 --   biggestPrimeAtMost 10 ==> 7
 
 biggestPrimeAtMost :: Integer -> Integer
-biggestPrimeAtMost n = biggestPrimeAtMost' n n
-
-biggestPrimeAtMost' :: Integer -> Integer -> Integer
-biggestPrimeAtMost' n k
-  | k == 1    = n
-  | isPrime k = k
-  | otherwise = biggestPrimeAtMost' n (k - 1)
+biggestPrimeAtMost n
+  | isPrime n = n
+  | otherwise = biggestPrimeAtMost (n - 1)
