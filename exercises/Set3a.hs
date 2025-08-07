@@ -191,7 +191,7 @@ bomb x = Right (x-1)
 -- Hint! This is a great use for list comprehensions
 
 joinToLength :: Int -> [String] -> [String]
-joinToLength n string = [ x ++ y | x <- string, y <- string, length (x ++ y) == n]
+joinToLength i str = [ z | x <- str, y <- str, let z = x ++ y, length z == i]
 
 ------------------------------------------------------------------------------
 -- Ex 10: implement the operator +|+ that returns a list with the first
