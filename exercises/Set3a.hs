@@ -28,9 +28,9 @@ import Data.List
 --  maxBy head   [1,2,3] [4,5]  ==>  [4,5]
 
 maxBy :: (a -> Int) -> a -> a -> a
-maxBy measure a b = if measure a > measure b
-                    then a
-                    else b
+maxBy measure a b
+  | measure a > measure b = a
+  | otherwise             = b
 
 ------------------------------------------------------------------------------
 -- Ex 2: implement the function mapMaybe that takes a function and a
@@ -42,7 +42,7 @@ maxBy measure a b = if measure a > measure b
 --   mapMaybe length (Just "abc") ==> Just 3
 
 mapMaybe :: (a -> b) -> Maybe a -> Maybe b
-mapMaybe f Nothing  = Nothing
+mapMaybe _ Nothing  = Nothing
 mapMaybe f (Just a) = Just $ f a
 
 ------------------------------------------------------------------------------
@@ -57,9 +57,8 @@ mapMaybe f (Just a) = Just $ f a
 --   mapMaybe2 div (Just 6) Nothing   ==>  Nothing
 
 mapMaybe2 :: (a -> b -> c) -> Maybe a -> Maybe b -> Maybe c
-mapMaybe2 f Nothing _         = Nothing
-mapMaybe2 f _ Nothing         = Nothing 
 mapMaybe2 f (Just x) (Just y) = Just $ f x y
+mapMaybe2 _ _        _        = Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 4: define the functions firstHalf and palindrome so that
@@ -81,12 +80,9 @@ mapMaybe2 f (Just x) (Just y) = Just $ f x y
 palindromeHalfs :: [String] -> [String]
 palindromeHalfs xs = map firstHalf (filter palindrome xs)
 
-firstHalf string = take (numOfElementsToTake string) string
-  where numOfElementsToTake string = if odd (length string)
-                                     then div (length string) 2 + 1
-                                     else div (length string) 2
+firstHalf str = take ((length str + 1) `div` 2) str
 
-palindrome string = string == reverse string
+palindrome str = str == reverse str
 
 ------------------------------------------------------------------------------
 -- Ex 5: Implement a function capitalize that takes in a string and
@@ -104,10 +100,10 @@ palindrome string = string == reverse string
 --   capitalize "goodbye cruel world" ==> "Goodbye Cruel World"
 
 capitalize :: String -> String
-capitalize string = unwords . map capitalizeFirst $ words string
+capitalize = unwords . map capitalizeFirst . words
 
 capitalizeFirst :: String -> String
-capitalizeFirst (x:xs) = toUpper x : xs
+capitalizeFirst (c:cs) = toUpper c : cs
 
 ------------------------------------------------------------------------------
 -- Ex 6: powers k max should return all the powers of k that are less
@@ -124,8 +120,7 @@ capitalizeFirst (x:xs) = toUpper x : xs
 --   * the function takeWhile
 
 powers :: Int -> Int -> [Int]
-powers k max = takeWhile (<= max) (infinitePowers k 0)
-  where infinitePowers k n = k^n : infinitePowers k (n + 1)
+powers k max = takeWhile (<= max) $ map (k^) [0..max]
 
 ------------------------------------------------------------------------------
 -- Ex 7: implement a functional while loop. While should be a function
