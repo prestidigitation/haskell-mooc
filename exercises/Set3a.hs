@@ -28,7 +28,9 @@ import Data.List
 --  maxBy head   [1,2,3] [4,5]  ==>  [4,5]
 
 maxBy :: (a -> Int) -> a -> a -> a
-maxBy measure a b = todo
+maxBy measure a b = if measure a > measure b
+                    then a
+                    else b
 
 ------------------------------------------------------------------------------
 -- Ex 2: implement the function mapMaybe that takes a function and a
@@ -40,7 +42,8 @@ maxBy measure a b = todo
 --   mapMaybe length (Just "abc") ==> Just 3
 
 mapMaybe :: (a -> b) -> Maybe a -> Maybe b
-mapMaybe f x = todo
+mapMaybe f Nothing  = Nothing
+mapMaybe f (Just a) = Just $ f a
 
 ------------------------------------------------------------------------------
 -- Ex 3: implement the function mapMaybe2 that works like mapMaybe
@@ -54,7 +57,9 @@ mapMaybe f x = todo
 --   mapMaybe2 div (Just 6) Nothing   ==>  Nothing
 
 mapMaybe2 :: (a -> b -> c) -> Maybe a -> Maybe b -> Maybe c
-mapMaybe2 f x y = todo
+mapMaybe2 f Nothing _         = Nothing
+mapMaybe2 f _ Nothing         = Nothing 
+mapMaybe2 f (Just x) (Just y) = Just $ f x y
 
 ------------------------------------------------------------------------------
 -- Ex 4: define the functions firstHalf and palindrome so that
@@ -76,9 +81,12 @@ mapMaybe2 f x y = todo
 palindromeHalfs :: [String] -> [String]
 palindromeHalfs xs = map firstHalf (filter palindrome xs)
 
-firstHalf = todo
+firstHalf string = take (numOfElementsToTake string) string
+  where numOfElementsToTake string = if odd (length string)
+                                     then div (length string) 2 + 1
+                                     else div (length string) 2
 
-palindrome = todo
+palindrome string = string == reverse string
 
 ------------------------------------------------------------------------------
 -- Ex 5: Implement a function capitalize that takes in a string and
@@ -96,7 +104,10 @@ palindrome = todo
 --   capitalize "goodbye cruel world" ==> "Goodbye Cruel World"
 
 capitalize :: String -> String
-capitalize = todo
+capitalize string = unwords . map capitalizeFirst $ words string
+
+capitalizeFirst :: String -> String
+capitalizeFirst (x:xs) = toUpper x : xs
 
 ------------------------------------------------------------------------------
 -- Ex 6: powers k max should return all the powers of k that are less
@@ -113,7 +124,8 @@ capitalize = todo
 --   * the function takeWhile
 
 powers :: Int -> Int -> [Int]
-powers k max = todo
+powers k max = takeWhile (<= max) (infinitePowers k 0)
+  where infinitePowers k n = k^n : infinitePowers k (n + 1)
 
 ------------------------------------------------------------------------------
 -- Ex 7: implement a functional while loop. While should be a function
@@ -136,7 +148,9 @@ powers k max = todo
 --     ==> Avvt
 
 while :: (a->Bool) -> (a->a) -> a -> a
-while check update value = todo
+while check update value
+  | not $ check value = value
+  | otherwise         = while check update (update value)
 
 ------------------------------------------------------------------------------
 -- Ex 8: another version of a while loop. This time, the check
@@ -156,7 +170,9 @@ while check update value = todo
 -- Hint! Remember the case-of expression from lecture 2.
 
 whileRight :: (a -> Either b a) -> a -> b
-whileRight check x = todo
+whileRight check x = case check x of
+  Left y -> y
+  Right y -> whileRight check y
 
 -- for the whileRight examples:
 -- step k x doubles x if it's less than k
@@ -180,7 +196,7 @@ bomb x = Right (x-1)
 -- Hint! This is a great use for list comprehensions
 
 joinToLength :: Int -> [String] -> [String]
-joinToLength = todo
+joinToLength n string = [ x ++ y | x <- string, y <- string, length (x ++ y) == n]
 
 ------------------------------------------------------------------------------
 -- Ex 10: implement the operator +|+ that returns a list with the first
@@ -193,7 +209,10 @@ joinToLength = todo
 --   [1,2,3] +|+ [4,5,6]  ==> [1,4]
 --   [] +|+ [True]        ==> [True]
 --   [] +|+ []            ==> []
-
+(+|+) :: [a] -> [a] -> [a]
+(x:xs) +|+ (y:ys) = [x,y]
+(x:xs) +|+ _      = [x]
+_      +|+ (y:ys) = [y]
 
 ------------------------------------------------------------------------------
 -- Ex 11: remember the lectureParticipants example from Lecture 2? We
@@ -210,7 +229,10 @@ joinToLength = todo
 --   sumRights [Left "bad!", Left "missing"]         ==>  0
 
 sumRights :: [Either a Int] -> Int
-sumRights = todo
+sumRights [] = 0
+sumRights (x:xs) = case x of
+  Left _    -> sumRights xs
+  Right val -> val + sumRights xs
 
 ------------------------------------------------------------------------------
 -- Ex 12: recall the binary function composition operation
@@ -226,7 +248,16 @@ sumRights = todo
 --   multiCompose [(3*), (2^), (+1)] 0 ==> 6
 --   multiCompose [(+1), (2^), (3*)] 0 ==> 2
 
-multiCompose fs = todo
+multiCompose [] a = a
+multiCompose (f:fs) a = (f . multiCompose fs) a
+-- multiCompose [reverse, tail, (++"bar")] "foo"
+-- (reverse . multiCompose [tail, (++"bar")]) "foo"
+-- (reverse . (tail . multiCompose [(++"bar")])) "foo"
+-- (reverse . (tail . (++"bar"))) "foo"
+-- reverse . tail . (++"bar") "foo"
+-- reverse . tail "foobar"
+-- reverse "oobar"
+-- "raboo"
 
 ------------------------------------------------------------------------------
 -- Ex 13: let's consider another way to compose multiple functions. Given
@@ -247,7 +278,12 @@ multiCompose fs = todo
 --   multiApp id [head, (!!2), last] "axbxc" ==> ['a','b','c'] i.e. "abc"
 --   multiApp sum [head, (!!2), last] [1,9,2,9,3] ==> 6
 
-multiApp = todo
+-- multiApp :: (a -> b) -> [a -> b] -> a -> [a]
+-- multiApp g fs a = g $ map (\f -> f a) fs
+multiApp g fs a = g $ go fs a
+  where
+    go [] _     = []
+    go (f:fs) a = f a : go fs a
 
 ------------------------------------------------------------------------------
 -- Ex 14: in this exercise you get to implement an interpreter for a
@@ -282,4 +318,14 @@ multiApp = todo
 -- function, the surprise won't work. See section 3.8 in the material.
 
 interpreter :: [String] -> [String]
-interpreter commands = todo
+interpreter = go 0 0 []
+  where
+    go :: Int -> Int -> [String] -> [String] -> [String]
+    go currentX currentY acc [] = acc
+    go currentX currentY acc (x:xs) = case x of
+      "up" -> go currentX (currentY + 1) acc xs
+      "down" -> go currentX (currentY - 1) acc xs
+      "left" -> go (currentX - 1) currentY acc xs
+      "right" -> go (currentX + 1) currentY acc xs
+      "printX" -> go currentX currentY (acc ++ [show currentX]) xs
+      "printY" -> go currentX currentY (acc ++ [show currentY]) xs
