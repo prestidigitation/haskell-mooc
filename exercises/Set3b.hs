@@ -50,15 +50,11 @@ buildList start count end = start : buildList start (count - 1) end
 -- Ps. you'll probably need a recursive helper function
 
 sums :: Int -> [Int]
-sums n = sums' n 1
-
-sums' :: Int -> Int -> [Int]
-sums' x i
-  | i == x = [triangular i]
-  | otherwise = triangular i : sums' x (i + 1)
-
-triangular :: Int -> Int
-triangular n = if n == 0 then 0 else n + triangular (n - 1)
+sums i = go 0 1
+  where
+    go sum j
+      | j > i = []
+      | otherwise = (sum + j) : go (sum + j) (j + 1)
 
 ------------------------------------------------------------------------------
 -- Ex 3: define a function mylast that returns the last value of the
@@ -73,8 +69,7 @@ triangular n = if n == 0 then 0 else n + triangular (n - 1)
 
 mylast :: a -> [a] -> a
 mylast def []     = def
-mylast def [x]    = x
-mylast def (_:xs) = mylast def xs
+mylast _   (x:xs) = mylast x xs
 
 ------------------------------------------------------------------------------
 -- Ex 4: safe list indexing. Define a function indexDefault so that
@@ -92,17 +87,9 @@ mylast def (_:xs) = mylast def xs
 --   indexDefault ["a","b","c"] (-1) "d" ==> "d"
 
 indexDefault :: [a] -> Int -> a -> a
-indexDefault xs i def = go (getElemAtIndex 0 i xs)
-  where
-    go Nothing = def
-    go (Just x) = x
-
-getElemAtIndex :: Int -> Int -> [a] -> Maybe a
-getElemAtIndex _            _           [] = Nothing
-getElemAtIndex currentIndex targetIndex (x:xs)
-  | currentIndex > targetIndex = Nothing
-  | currentIndex == targetIndex = Just x
-  | otherwise = getElemAtIndex (currentIndex + 1) targetIndex xs
+indexDefault []     _ def = def
+indexDefault (x:xs) 0 def = x
+indexDefault (x:xs) i def = indexDefault xs (i - 1) def
 
 ------------------------------------------------------------------------------
 -- Ex 5: define a function that checks if the given list is in
@@ -120,7 +107,9 @@ getElemAtIndex currentIndex targetIndex (x:xs)
 sorted :: [Int] -> Bool
 sorted []  = True
 sorted [x] = True
-sorted (x:y:xs) = if x > y then False else sorted (y:xs)
+sorted (x:y:xs)
+  | x > y     = False
+  | otherwise = sorted (y:xs)
 
 ------------------------------------------------------------------------------
 -- Ex 6: compute the partial sums of the given list like this:
@@ -167,9 +156,10 @@ sumsOf xs = go xs 0
 --     go (x:xs) acc = go xs (x : acc)
 
 merge :: [Int] -> [Int] -> [Int]
-merge []     [] = []
-merge (x:xs) [] = x : merge xs []
-merge [] (y:ys) = y : merge [] ys
+-- If one list is empty, then you can return the tail of the other list 
+-- because both lists are already sorted.
+merge xs [] = xs
+merge [] ys = ys
 merge (x:xs) (y:ys)
   | x <= y = x : merge xs (y:ys)
   | otherwise = y : merge (x:xs) ys
@@ -213,9 +203,8 @@ mymaximum bigger initial (x:xs)
 -- Use recursion and pattern matching. Do not use any library functions.
 
 map2 :: (a -> b -> c) -> [a] -> [b] -> [c]
-map2 f _      []    = []
-map2 f []     _     = []
 map2 f (a:as) (b:bs) = f a b : map2 f as bs
+map2 f _      _      = []
 
 ------------------------------------------------------------------------------
 -- Ex 10: implement the function maybeMap, which works a bit like a
@@ -241,5 +230,5 @@ map2 f (a:as) (b:bs) = f a b : map2 f as bs
 maybeMap :: (a -> Maybe b) -> [a] -> [b]
 maybeMap f [] = []
 maybeMap f (x:xs) = case f x of
-  Just x -> x : maybeMap f xs
+  Just y  -> y : maybeMap f xs
   Nothing -> maybeMap f xs
