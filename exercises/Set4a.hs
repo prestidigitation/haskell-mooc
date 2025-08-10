@@ -35,11 +35,14 @@ import Data.Array
 -- you remove the Eq a => constraint from the type!
 
 allEqual :: Eq a => [a] -> Bool
+-- allEqual [] = True
+-- allEqual [x] = True
+-- allEqual (x:y:ys)
+--   | x /= y = False
+--   | otherwise = allEqual (y:ys)
+
 allEqual [] = True
-allEqual [x] = True
-allEqual (x:y:ys)
-  | x /= y = False
-  | otherwise = allEqual (y:ys)
+allEqual (x:xs) = all (==x) xs
 
 ------------------------------------------------------------------------------
 -- Ex 2: implement the function distinct which returns True if all
@@ -54,9 +57,7 @@ allEqual (x:y:ys)
 --   distinct [1,2] ==> True
 
 distinct :: Eq a => [a] -> Bool
-distinct xs
-  | length xs == length (nub xs) = True
-  | otherwise = False
+distinct xs = length xs == length (nub xs)
 
 ------------------------------------------------------------------------------
 -- Ex 3: implement the function middle that returns the middle value
@@ -128,10 +129,16 @@ longest xs = go xs []
 --   incrementKey 'a' [('a',3.4)] ==> [('a',4.4)]
 
 incrementKey :: (Eq k, Num v) => k -> [(k,v)] -> [(k,v)]
-incrementKey _ [] = []
-incrementKey k ((x,y):xs)
-  | k == x = (x, y + 1) : incrementKey k xs
-  | otherwise = (x,y) : incrementKey k xs
+-- incrementKey _ [] = []
+-- incrementKey k ((x,y):xs)
+--   | k == x = (x, y + 1) : incrementKey k xs
+--   | otherwise = (x,y) : incrementKey k xs
+
+incrementKey k = map incr
+  where
+    incr (k', v)
+      | k' == k = (k', v + 1)
+      | otherwise = (k', v)
 
 ------------------------------------------------------------------------------
 -- Ex 7: compute the average of a list of values of the Fractional
@@ -166,8 +173,14 @@ average xs = sum xs / fromIntegral (length xs)
 
 winner :: Map.Map String Int -> String -> String -> String
 winner scores player1 player2
-  | Map.findWithDefault 0 player1 scores >= Map.findWithDefault 0 player2 scores = player1
+--   | Map.findWithDefault 0 player1 scores >= Map.findWithDefault 0 player2 scores = player1
+--   | otherwise = player2
+
+  | score player1 >= score player2 = player1
   | otherwise = player2
+  where
+    score p = Map.findWithDefault 0 p scores
+
 
 ------------------------------------------------------------------------------
 -- Ex 9: compute how many times each value in the list occurs. Return
