@@ -98,27 +98,27 @@ setAge newAge (MkPerson _ name) = MkPerson newAge name
 --   getY (up (up origin))    ==> 2
 --   getX (up (right origin)) ==> 1
 
-data Position = MkPosition Int Int
+data Position = Position Int Int
 
 -- origin is a Position value with x and y set to 0
 origin :: Position
-origin = MkPosition 0 0
+origin = Position 0 0
 
 -- getX returns the x of a Position
 getX :: Position -> Int
-getX (MkPosition x _) = x
+getX (Position x _) = x
 
 -- getY returns the y of a position
 getY :: Position -> Int
-getY (MkPosition _ y) = y
+getY (Position _ y) = y
 
 -- up increases the y value of a position by one
 up :: Position -> Position
-up (MkPosition x y) = MkPosition x (y + 1)
+up (Position x y) = Position x (y + 1)
 
 -- right increases the x value of a position by one
 right :: Position -> Position
-right (MkPosition x y) = MkPosition (x + 1) y
+right (Position x y) = Position (x + 1) y
 
 ------------------------------------------------------------------------------
 -- Ex 6: Here's a datatype that represents a student. A student can
@@ -156,28 +156,28 @@ study student = case student of
 -- get (tick (tick (toggle (tick zero))))
 --   ==> -1
 
-data UpDown = MkUpCounter Int | MkDownCounter Int
+data UpDown = Up Int | Down Int
 
 -- zero is an increasing counter with value 0
 zero :: UpDown
-zero = MkUpCounter 0
+zero = Up 0
 
 -- get returns the counter value
 get :: UpDown -> Int
-get (MkUpCounter count) = count
-get (MkDownCounter count) = count
+get (Up count) = count
+get (Down count) = count
 
 -- tick increases an increasing counter by one or decreases a
 -- decreasing counter by one
 tick :: UpDown -> UpDown
-tick (MkUpCounter count) = MkUpCounter (count + 1)
-tick (MkDownCounter count) = MkDownCounter (count - 1)
+tick (Up count) = Up (count + 1)
+tick (Down count) = Down (count - 1)
 
 -- toggle changes an increasing counter into a decreasing counter and
 -- vice versa
 toggle :: UpDown -> UpDown
-toggle (MkUpCounter count) = MkDownCounter count
-toggle (MkDownCounter count) = MkUpCounter count
+toggle (Up count) = Down count
+toggle (Down count) = Up count
 
 ------------------------------------------------------------------------------
 -- Ex 8: you'll find a Color datatype below. It has the three basic
@@ -211,7 +211,7 @@ rgb Red = [1,0,0]
 rgb Green = [0,1,0]
 rgb Blue = [0,0,1]
 rgb (Mix color1 color2) = zipWith (\x y -> (x + y) / 2) (rgb color1) (rgb color2)
-rgb (Invert color) = map (\x -> 1 - x) (rgb color)
+rgb (Invert color) = map (1 -) (rgb color)
 
 ------------------------------------------------------------------------------
 -- Ex 9: define a parameterized datatype OneOrTwo that contains one or
@@ -247,7 +247,7 @@ data KeyVals k v = Empty | Pair k v (KeyVals k v)
 
 toList :: KeyVals k v -> [(k,v)]
 toList Empty = []
-toList (Pair k v tail) = (k,v) : toList tail
+toList (Pair k v rest) = (k,v) : toList rest
 
 fromList :: [(k,v)] -> KeyVals k v
 fromList [] = Empty
@@ -274,10 +274,10 @@ fromNat (PlusOne n) = 1 + fromNat n
 toNat :: Int -> Maybe Nat
 toNat n
   | n < 0 = Nothing
-  | n == 0 = Just Zero
-  | otherwise = Just $ go (toNat (n - 1))
+  | otherwise = Just (go n)
   where
-    go (Just x) = PlusOne x
+    go 0 = Zero
+    go n = PlusOne (go (n - 1))
 
 ------------------------------------------------------------------------------
 -- Ex 12: While pleasingly simple in its definition, the Nat datatype is not
@@ -337,21 +337,16 @@ inc (O b) = I b
 inc (I b) = O (inc b)
 
 prettyPrint :: Bin -> String
--- prettyPrint End = ""
--- prettyPrint (O b) = prettyPrint b ++ ['0']
--- prettyPrint (I b) = prettyPrint b ++ ['1']
-prettyPrint n = go n []
+prettyPrint n = go n ""
   where
     go End acc = acc
     go (O b) acc = go b ('0' : acc)
     go (I b) acc = go b ('1' : acc)
 
 fromBin :: Bin -> Int
-fromBin b = go b 0
-  where
-    go End _ = 0
-    go (O b) i = go b (i + 1)
-    go (I b) i = 2^i + go b (i + 1)
+fromBin End = 0
+fromBin (O b) = 2 * fromBin b
+fromBin (I b) = 2 * fromBin b + 1
 
 toBin :: Int -> Bin
 toBin 0 = O End
