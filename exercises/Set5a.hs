@@ -347,18 +347,18 @@ prettyPrint n = go n []
     go (I b) acc = go b ('1' : acc)
 
 fromBin :: Bin -> Int
-fromBin = todo
--- fromBin End = 0
--- fromBin (O b) = 2 * fromBin b
--- fromBin (I b) = 1 + fromBin b
+fromBin b = go b 0
+  where
+    go End _ = 0
+    go (O b) i = go b (i + 1)
+    go (I b) i = 2^i + go b (i + 1)
 
 toBin :: Int -> Bin
-toBin = todo
--- toBin 0 = End
--- toBin 1 = I End
--- toBin n
---   | remainder == 1 = I (toBin halved)
---   | otherwise = if halved == 0 then O (toBin 0) else O (toBin halved)
---   where
---     remainder = n `mod` 2
---     halved = n `div` 2
+toBin 0 = O End
+toBin 1 = I End
+toBin n
+  | remainder == 0 = O (toBin halved)
+  | otherwise      = I (toBin halved)
+  where
+    halved = n `div` 2
+    remainder = n `mod` 2
