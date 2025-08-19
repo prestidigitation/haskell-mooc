@@ -16,7 +16,7 @@ data Tree a = Empty | Node a (Tree a) (Tree a)
 
 valAtRoot :: Tree a -> Maybe a
 valAtRoot Empty = Nothing
-valAtRoot (Node a _ _) = Just a
+valAtRoot (Node v _ _) = Just v
 
 ------------------------------------------------------------------------------
 -- Ex 2: compute the size of a tree, that is, the number of Node
@@ -175,11 +175,13 @@ data Step = StepL | StepR
 --   walk [StepL,StepL] (Node 1 (Node 2 Empty Empty) Empty)  ==>  Nothing
 
 walk :: [Step] -> Tree a -> Maybe a
-walk [] (Node v _ _) = Just v
-walk _ Empty = Nothing
-walk (x:xs) (Node v l r) = case x of
-  StepL -> walk xs l
-  StepR -> walk xs r
+walk []            (Node v _ _) = Just v
+walk (StepL:steps) (Node _ l _) = walk steps l
+walk (StepR:steps) (Node _ _ r) = walk steps r
+walk _             _            = Nothing
+-- walk (x:xs) (Node v l r) = case x of
+--   StepL -> walk xs l
+--   StepR -> walk xs r
 
 ------------------------------------------------------------------------------
 -- Ex 9: given a tree, a path and a value, set the value at the end of
@@ -200,14 +202,10 @@ walk (x:xs) (Node v l r) = case x of
 --   set [StepL,StepR] 1 (Node 0 Empty Empty)  ==>  (Node 0 Empty Empty)
 
 set :: [Step] -> a -> Tree a -> Tree a
-set _ val Empty = Empty
-set [] val (Node v l r) = Node val l r
-set (x:xs) val (Node v l r)
-  | x == StepL = Node v newLeft r
-  | x == StepR = Node v l newRight
-  where
-    newLeft = set xs val l
-    newRight = set xs val r
+set []            val (Node v l r) = Node val l r
+set (StepL:steps) val (Node v l r) = Node v (set steps val l) r
+set (StepR:steps) val (Node v l r) = Node v l (set steps val r)
+set _             _   t            = t
 
 ------------------------------------------------------------------------------
 -- Ex 10: given a value and a tree, return a path that goes from the
