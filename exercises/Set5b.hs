@@ -155,7 +155,8 @@ cull val (Node v l r)
 --                     (Node 3 Empty Empty))   ==>   True
 
 isOrdered :: Ord a => Tree a -> Bool
-isOrdered = todo
+isOrdered Empty = True
+isOrdered (Node v l r) = allValues (v >) l && allValues (v <) r && isOrdered l && isOrdered r
 
 ------------------------------------------------------------------------------
 -- Ex 8: a path in a tree can be represented as a list of steps that
@@ -174,7 +175,11 @@ data Step = StepL | StepR
 --   walk [StepL,StepL] (Node 1 (Node 2 Empty Empty) Empty)  ==>  Nothing
 
 walk :: [Step] -> Tree a -> Maybe a
-walk = todo
+walk [] (Node v _ _) = Just v
+walk _ Empty = Nothing
+walk (x:xs) (Node v l r) = case x of
+  StepL -> walk xs l
+  StepR -> walk xs r
 
 ------------------------------------------------------------------------------
 -- Ex 9: given a tree, a path and a value, set the value at the end of
@@ -195,7 +200,14 @@ walk = todo
 --   set [StepL,StepR] 1 (Node 0 Empty Empty)  ==>  (Node 0 Empty Empty)
 
 set :: [Step] -> a -> Tree a -> Tree a
-set path val tree = todo
+set _ val Empty = Empty
+set [] val (Node v l r) = Node val l r
+set (x:xs) val (Node v l r)
+  | x == StepL = Node v newLeft r
+  | x == StepR = Node v l newRight
+  where
+    newLeft = set xs val l
+    newRight = set xs val r
 
 ------------------------------------------------------------------------------
 -- Ex 10: given a value and a tree, return a path that goes from the
@@ -211,4 +223,11 @@ set path val tree = todo
 --                    (Node 5 Empty Empty))                     ==>  Just [StepL,StepR]
 
 search :: Eq a => a -> Tree a -> Maybe [Step]
-search = todo
+search val Empty = Nothing
+search val (Node v l r)
+  | val == v = Just []
+  | otherwise = case search val l of
+      Just x -> Just (StepL : x)
+      Nothing -> case search val r of
+        Just x -> Just (StepR : x)
+        Nothing -> Nothing
