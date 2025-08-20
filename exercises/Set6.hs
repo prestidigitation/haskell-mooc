@@ -32,12 +32,6 @@ instance Ord Country where
   Norway <= Switzerland = True
   Switzerland <= Switzerland = True
   _ <= _ = False
-  
-  min x y
-    | x <= y = x
-    | otherwise = y
-  
-  -- max x y
 
 ------------------------------------------------------------------------------
 -- Ex 3: Implement an Eq instance for the type Name which contains a String.
@@ -68,7 +62,7 @@ data List a = Empty | LNode a (List a)
 
 instance Eq a => Eq (List a) where
   (==) Empty Empty = True
-  (==) (LNode val1 rest1) (LNode val2 rest2) = val1 == val2 && (==) rest1 rest2
+  (==) (LNode x xs) (LNode y ys) = x == y && (==) xs ys
   (==) _ _ = False
 
 ------------------------------------------------------------------------------
@@ -97,7 +91,7 @@ instance Price Egg where
   price ChocolateEgg = 30
 
 instance Price Milk where
-  price (Milk x) = 15 * x
+  price (Milk litres) = 15 * litres
 
 ------------------------------------------------------------------------------
 -- Ex 6: define the necessary instance hierarchy in order to be able
@@ -109,11 +103,10 @@ instance Price Milk where
 -- price [Nothing, Nothing, Just (Milk 1), Just (Milk 2)]  ==> 45
 instance Price a => Price (Maybe a) where
   price Nothing = 0
-  price (Just x) = price x
+  price (Just xs) = price xs
 
 instance Price a => Price [a] where
-  price [] = 0
-  price (x:xs) = price x + price xs
+  price xs = sum (map price xs)
 
 ------------------------------------------------------------------------------
 -- Ex 7: below you'll find the datatype Number, which is either an
@@ -126,13 +119,9 @@ data Number = Finite Integer | Infinite
   deriving (Show,Eq)
 
 instance Ord Number where
-  compare (Finite x) (Finite y)
-    | x < y = LT
-    | x == y = EQ
-    | otherwise = GT
-  compare Infinite (Finite _) = GT
-  compare (Finite x) Infinite = LT
-  compare Infinite Infinite = EQ
+  (Finite x) <= (Finite y) = x <= y
+  _          <= Infinite   = True
+  _          <= _          = False
 
 ------------------------------------------------------------------------------
 -- Ex 8: rational numbers have a numerator and a denominator that are
@@ -228,11 +217,11 @@ class Addable a where
 
 instance Addable Integer where
   zero = 0
-  add x y = x + y
+  add = (+)
 
 instance Addable [a] where
   zero = []
-  add xs ys = xs ++ ys
+  add = (++)
 
 ------------------------------------------------------------------------------
 -- Ex 12: cycling. Implement a type class Cycle that contains a
