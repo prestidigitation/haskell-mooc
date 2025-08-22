@@ -164,13 +164,13 @@ reverseNonEmpty (x :| xs) = h :| t
 --    ==> Velocity 20
 
 instance Semigroup Distance where
-  Distance a <> Distance b = Distance (a + b)
+  Distance x <> Distance y = Distance (x + y)
 
 instance Semigroup Time where
-  Time a <> Time b = Time (a + b)
+  Time x <> Time y = Time (x + y)
 
 instance Semigroup Velocity where
-  Velocity a <> Velocity b = Velocity (a + b)
+  Velocity x <> Velocity y = Velocity (x + y)
 
 ------------------------------------------------------------------------------
 -- Ex 7: implement a Monoid instance for the Set type from exercise 2.
