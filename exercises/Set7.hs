@@ -58,10 +58,18 @@ member x (Set ys) = x `elem` ys
 
 -- add a member to a set
 add :: Ord a => a -> Set a -> Set a
-add x (Set []) = Set [x]
-add x (Set ys)
-  | member x (Set ys) = Set ys
-  | otherwise         = Set $ sort (x : ys)
+-- add x (Set []) = Set [x]
+-- add x (Set ys)
+--   | member x (Set ys) = Set ys
+--   | otherwise         = Set $ sort (x : ys)
+
+add a (Set xs) = Set (go a xs)
+  where
+    go a [] = [a]
+    go a (x:xs)
+      | a == x = x:xs
+      | a > x = x : go a xs
+      | otherwise = a : x : xs
 
 ------------------------------------------------------------------------------
 -- Ex 3: a state machine for baking a cake. The type Event represents
@@ -99,28 +107,16 @@ data Event = AddEggs | AddFlour | AddSugar | Mix | Bake
 data State = Start | Eggs | EggsAndFlour | EggsAndSugar | EggsFlourAndSugar | Mixed | Error | Finished
   deriving (Eq,Show)
 
+step :: State -> Event -> State
 step Start AddEggs = Eggs
-step Start _       = Error
-
 step Eggs AddFlour = EggsAndFlour
 step Eggs AddSugar = EggsAndSugar
-step Eggs _        = Error
-
 step EggsAndFlour AddSugar = EggsFlourAndSugar
-step EggsAndFlour _        = Error
-
 step EggsAndSugar AddFlour = EggsFlourAndSugar
-step EggsAndSugar _        = Error
-
 step EggsFlourAndSugar Mix = Mixed
-step EggsFlourAndSugar _   = Error
-
 step Mixed Bake = Finished
-step Mixed _    = Error
-
 step Finished _ = Finished
-
-step Error _ = Error
+step _ _ = Error
 
 -- do not edit this
 bake :: [Event] -> State
