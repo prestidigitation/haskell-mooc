@@ -134,9 +134,9 @@ renderListExample = renderList justADot (9,11) (9,11)
 
 dotAndLine :: Picture
 dotAndLine = Picture f
-  where f (Coord x y) | x == 3 && y == 4 = white
-                      | y == 8 = pink
-                      | otherwise = black
+  where f (Coord 3 4) = white
+        f (Coord _ 8) = pink
+        f _           = black
 
 ------------------------------------------------------------------------------
 
@@ -170,7 +170,8 @@ dotAndLine = Picture f
 --          ["7f0000","7f0000","7f0000"]]
 
 blendColor :: Color -> Color -> Color
-blendColor (Color r1 g1 b1) (Color r2 g2 b2) = Color ((r1 + r2) `div` 2) ((g1 + g2) `div` 2) ((b1 + b2) `div` 2)
+blendColor (Color r1 g1 b1) (Color r2 g2 b2) = Color (avg r1 r2) (avg g1 g2) (avg b1 b2)
+  where avg x y = (x + y) `div` 2
 
 combine :: (Color -> Color -> Color) -> Picture -> Picture -> Picture
 combine f (Picture c1) (Picture c2) = Picture (\coord -> f (c1 coord) (c2 coord))
@@ -245,7 +246,7 @@ exampleCircle = fill red (circle 80 100 200)
 
 rectangle :: Int -> Int -> Int -> Int -> Shape
 rectangle x0 y0 w h = Shape f
-  where f (Coord x y) = x >= x0 && x < x0 + w && y >= y0 && y < y0 + h
+  where f (Coord x y) = and [x >= x0, x < x0 + w, y >= y0, y < y0 + h]
 
 ------------------------------------------------------------------------------
 
@@ -265,7 +266,8 @@ union :: Shape -> Shape -> Shape
 union (Shape c1) (Shape c2) = Shape (\coord -> c1 coord || c2 coord)
 
 cut :: Shape -> Shape -> Shape
-cut (Shape c1) (Shape c2) = Shape (\coord -> not (c2 coord && c1 coord) && (c1 coord || c2 coord))
+cut (Shape c1) (Shape c2) = Shape (\coord -> c1 coord && not (c2 coord))
+
 ------------------------------------------------------------------------------
 
 -- Here's a snowman, built using union from circles and rectangles.
@@ -293,10 +295,9 @@ exampleSnowman = fill white snowman
 --        ["000000","000000","000000"]]
 
 paintSolid :: Color -> Shape -> Picture -> Picture
--- paintSolid color shape base = todo
-paintSolid color (Shape s) (Picture b) = Picture f
-  where f coord | s coord = color
-                | otherwise = b coord
+paintSolid color (Shape f) (Picture g) = Picture h
+  where h coord | f coord = color
+                | otherwise = g coord
 
 ------------------------------------------------------------------------------
 
@@ -342,9 +343,9 @@ stripes a b = Picture f
 --       ["000000","000000","000000","000000","000000"]]
 
 paint :: Picture -> Shape -> Picture -> Picture
-paint (Picture p) (Shape s) (Picture b) = Picture f
-  where f coord | s coord = p coord
-                | otherwise = b coord
+paint (Picture pattern) (Shape shape) (Picture base) = Picture f
+  where f coord | shape coord = pattern coord
+                | otherwise = base coord
 
 ------------------------------------------------------------------------------
 
@@ -408,13 +409,13 @@ xy = Picture f
 data Fill = Fill Color
 
 instance Transform Fill where
-  apply (Fill color) picture = solid color
+  apply (Fill color) _ = solid color
 
 data Zoom = Zoom Int
   deriving Show
 
 instance Transform Zoom where
-  apply (Zoom x) picture = zoom x picture
+  apply (Zoom i) picture = zoom i picture
 
 data Flip = FlipX | FlipY | FlipXY
   deriving Show
@@ -439,7 +440,7 @@ data Chain a b = Chain a b
   deriving Show
 
 instance (Transform a, Transform b) => Transform (Chain a b) where
-  apply (Chain f g) = apply f . apply g
+  apply (Chain t1 t2) = apply t1 . apply t2
 
 ------------------------------------------------------------------------------
 
@@ -490,13 +491,6 @@ instance Transform Blur where
       
       neighbors (x, y) = [(x,y), (x+1,y), (x-1,y), (x,y+1), (x,y-1)]
       average xs = sum xs `div` length xs
-
--- blendColor :: Color -> Color -> Color
--- blendColor (Color r1 g1 b1) (Color r2 g2 b2) = Color ((r1 + r2) `div` 2) ((g1 + g2) `div` 2) ((b1 + b2) `div` 2)
-
--- -- Let's define blend, we'll use it later
--- blend :: Picture -> Picture -> Picture
--- blend = combine blendColor
 
 ------------------------------------------------------------------------------
 
