@@ -26,7 +26,11 @@ import Mooc.Todo
 -- Otherwise return "Ok."
 
 workload :: Int -> Int -> String
-workload nExercises hoursPerExercise = todo
+workload nExercises hoursPerExercise
+  | totalHours > 100 = "Holy moly!"
+  | totalHours < 10  = "Piece of cake!"
+  | otherwise        = "Ok."
+    where totalHours = nExercises * hoursPerExercise
 
 ------------------------------------------------------------------------------
 -- Ex 2: Implement the function echo that builds a string like this:
@@ -39,7 +43,8 @@ workload nExercises hoursPerExercise = todo
 -- Hint: use recursion
 
 echo :: String -> String
-echo = todo
+echo "" = ""
+echo xs = xs ++ ", " ++ echo (drop 1 xs)
 
 ------------------------------------------------------------------------------
 -- Ex 3: A country issues some banknotes. The banknotes have a serial
@@ -52,7 +57,14 @@ echo = todo
 -- are valid.
 
 countValid :: [String] -> Int
-countValid = todo
+countValid banknotes = foldr valid 0 banknotes
+  where
+    valid note acc
+      -- | take 1 (drop 2 note) == take 1 (drop 4 note) = acc + 1
+      -- | take 1 (drop 3 note) == take 1 (drop 5 note) = acc + 1
+      | note !! 2 == note !! 4 = acc + 1
+      | note !! 3 == note !! 5 = acc + 1
+      | otherwise = acc
 
 ------------------------------------------------------------------------------
 -- Ex 4: Find the first element that repeats two or more times _in a
@@ -64,7 +76,8 @@ countValid = todo
 --   repeated [1,2,1,2,3,3] ==> Just 3
 
 repeated :: Eq a => [a] -> Maybe a
-repeated = todo
+repeated [] = Nothing
+repeated xs = if take 1 xs == take 1 (drop 1 xs) then Just $ head xs else repeated (drop 1 xs)
 
 ------------------------------------------------------------------------------
 -- Ex 5: A laboratory has been collecting measurements. Some of the
