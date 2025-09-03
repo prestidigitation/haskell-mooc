@@ -16,6 +16,8 @@ import Data.Ord
 
 import Mooc.Todo
 
+import qualified Data.Map as Map
+
 ------------------------------------------------------------------------------
 -- Ex 1: Implement a function workload that takes in the number of
 -- exercises a student has to finish, and another number that counts
@@ -99,7 +101,11 @@ repeated xs = if take 1 xs == take 1 (drop 1 xs) then Just $ head xs else repeat
 --     ==> Left "no data"
 
 sumSuccess :: [Either String Int] -> Either String Int
-sumSuccess = todo
+sumSuccess xs = foldr go (Left "no data") xs
+  where
+    go (Right val)    (Left "no data") = Right val
+    go (Right val1)   (Right val2)     = Right (val1 + val2)
+    go (Left message) acc              = acc
 
 ------------------------------------------------------------------------------
 -- Ex 6: A combination lock can either be open or closed. The lock
@@ -121,30 +127,32 @@ sumSuccess = todo
 --   isOpen (open "0000" (lock (changeCode "0000" (open "1234" aLock)))) ==> True
 --   isOpen (open "1234" (lock (changeCode "0000" (open "1234" aLock)))) ==> False
 
-data Lock = LockUndefined
+data Lock = Lock { locked :: Bool, combination :: String }
   deriving Show
 
 -- aLock should be a locked lock with the code "1234"
 aLock :: Lock
-aLock = todo
+aLock = Lock True "1234"
 
 -- isOpen returns True if the lock is open
 isOpen :: Lock -> Bool
-isOpen = todo
+isOpen (Lock locked _) = not locked
 
 -- open tries to open the lock with the given code. If the code is
 -- wrong, nothing happens.
 open :: String -> Lock -> Lock
-open = todo
+open combo (Lock locked combination)
+  | combo == combination = Lock False combination
+  | otherwise = Lock locked combination
 
 -- lock closes a lock. If the lock is already closed, nothing happens.
 lock :: Lock -> Lock
-lock = todo
+lock (Lock locked combination) = Lock True combination
 
 -- changeCode changes the code of an open lock. If the lock is closed,
 -- nothing happens.
 changeCode :: String -> Lock -> Lock
-changeCode = todo
+changeCode newCombo (Lock locked combination) = if locked then Lock locked combination else Lock locked newCombo
 
 ------------------------------------------------------------------------------
 -- Ex 7: Here's a type Text that just wraps a String. Implement an Eq
@@ -162,6 +170,8 @@ changeCode = todo
 data Text = Text String
   deriving Show
 
+instance Eq Text where
+  (Text xs) == (Text ys) = filter (not . isSpace) xs == filter (not . isSpace) ys
 
 ------------------------------------------------------------------------------
 -- Ex 8: We can represent functions or mappings as lists of pairs.
@@ -194,8 +204,14 @@ data Text = Text String
 --     compose [("a","alpha"),("b","beta"),("c","gamma")] [("alpha",1),("beta",2),("omicron",15)]
 --       ==> [("a",1),("b",2)]
 
-compose :: (Eq a, Eq b) => [(a,b)] -> [(b,c)] -> [(a,c)]
-compose = todo
+compose :: Ord b => [(a,b)] -> [(b,c)] -> [(a,c)]
+compose xs ys = foldr go [] xs
+  where
+    mapOfYs = Map.fromList ys
+
+    go (a, b) acc = case Map.lookup b mapOfYs of
+      Nothing -> acc
+      Just val -> (a, val) : acc
 
 ------------------------------------------------------------------------------
 -- Ex 9: Reorder a list using a list of indices.
@@ -239,4 +255,8 @@ multiply :: Permutation -> Permutation -> Permutation
 multiply p q = map (\i -> p !! (q !! i)) (identity (length p))
 
 permute :: Permutation -> [a] -> [a]
-permute = todo
+permute xs ys = result
+  where
+    pairs = zip xs ys
+    sortedPairs = sortBy (comparing fst) pairs
+    result = map (\(x, y) -> y) sortedPairs
