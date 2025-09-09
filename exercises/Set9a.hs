@@ -16,8 +16,6 @@ import Data.Ord
 
 import Mooc.Todo
 
-import qualified Data.Map as Map
-
 ------------------------------------------------------------------------------
 -- Ex 1: Implement a function workload that takes in the number of
 -- exercises a student has to finish, and another number that counts
@@ -59,14 +57,10 @@ echo xs = xs ++ ", " ++ echo (drop 1 xs)
 -- are valid.
 
 countValid :: [String] -> Int
-countValid banknotes = foldr valid 0 banknotes
+countValid ns = length (filter valid ns)
   where
-    valid note acc
-      -- | take 1 (drop 2 note) == take 1 (drop 4 note) = acc + 1
-      -- | take 1 (drop 3 note) == take 1 (drop 5 note) = acc + 1
-      | note !! 2 == note !! 4 = acc + 1
-      | note !! 3 == note !! 5 = acc + 1
-      | otherwise = acc
+    valid n = n !! 2 == n !! 4
+           || n !! 3 == n !! 5
 
 ------------------------------------------------------------------------------
 -- Ex 4: Find the first element that repeats two or more times _in a
@@ -78,8 +72,12 @@ countValid banknotes = foldr valid 0 banknotes
 --   repeated [1,2,1,2,3,3] ==> Just 3
 
 repeated :: Eq a => [a] -> Maybe a
-repeated [] = Nothing
-repeated xs = if take 1 xs == take 1 (drop 1 xs) then Just $ head xs else repeated (drop 1 xs)
+-- repeated [] = Nothing
+-- repeated xs = if take 1 xs == take 1 (drop 1 xs) then Just $ head xs else repeated (drop 1 xs)
+repeated (x:y:xs)
+  | x == y = Just x
+  | otherwise = repeated (y:xs)
+repeated _ = Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 5: A laboratory has been collecting measurements. Some of the
@@ -101,11 +99,14 @@ repeated xs = if take 1 xs == take 1 (drop 1 xs) then Just $ head xs else repeat
 --     ==> Left "no data"
 
 sumSuccess :: [Either String Int] -> Either String Int
-sumSuccess xs = foldr go (Left "no data") xs
-  where
-    go (Right val)    (Left "no data") = Right val
-    go (Right val1)   (Right val2)     = Right (val1 + val2)
-    go (Left message) acc              = acc
+-- sumSuccess xs = foldr go (Left "no data") xs
+--   where
+--     go (Right val)    (Left "no data") = Right val
+--     go (Right val1)   (Right val2)     = Right (val1 + val2)
+--     go (Left message) acc              = acc
+sumSuccess es = let successes = [x | Right x <- es]
+                in case successes of [] -> Left "no data"
+                                     xs -> Right (sum xs)
 
 ------------------------------------------------------------------------------
 -- Ex 6: A combination lock can either be open or closed. The lock
@@ -205,13 +206,18 @@ instance Eq Text where
 --       ==> [("a",1),("b",2)]
 
 compose :: Ord b => [(a,b)] -> [(b,c)] -> [(a,c)]
-compose xs ys = foldr go [] xs
-  where
-    mapOfYs = Map.fromList ys
+-- compose xs ys = foldr go [] xs
+--   where
+--     mapOfYs = Map.fromList ys
 
-    go (a, b) acc = case Map.lookup b mapOfYs of
-      Nothing -> acc
-      Just val -> (a, val) : acc
+--     go (a, b) acc = case Map.lookup b mapOfYs of
+--       Nothing -> acc
+--       Just val -> (a, val) : acc
+compose ab bc = concatMap apply ab
+  where
+    apply (a,b) = case lookup b bc of
+      Nothing -> []
+      Just c -> [(a,c)]
 
 ------------------------------------------------------------------------------
 -- Ex 9: Reorder a list using a list of indices.
@@ -255,8 +261,4 @@ multiply :: Permutation -> Permutation -> Permutation
 multiply p q = map (\i -> p !! (q !! i)) (identity (length p))
 
 permute :: Permutation -> [a] -> [a]
-permute xs ys = result
-  where
-    pairs = zip xs ys
-    sortedPairs = sortBy (comparing fst) pairs
-    result = map (\(x, y) -> y) sortedPairs
+permute p = map snd . sortBy (comparing fst) . zip p
